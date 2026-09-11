@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Access — PIN Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="vault-wrap">
+
+        <div class="scoreboard">
+            <div class="score-item">
+                <span class="score-value">{{ total_score }}</span>
+                <span class="score-tag">SCORE</span>
+            </div>
+            <div class="score-item">
+                <span class="score-value">{{ attempts }}</span>
+                <span class="score-tag">ATTEMPTS</span>
+            </div>
+            <div class="score-item">
+                <span class="score-value">{{ wins }}</span>
+                <span class="score-tag">CRACKED</span>
+            </div>
+        </div>
+
+        <div class="vault-panel">
+
+            <div class="panel-header">
+                <span class="eyebrow">SEC-4 ACCESS TERMINAL</span>
+                <h1>Guess the vault code</h1>
+                <p class="sub">A fresh 4-digit code is drawn the instant you attempt the lock. Score for every digit you
+                    get right — full position, or just the right digit in the wrong spot.</p>
+            </div>
+
+            <form id="pinForm" method="POST" autocomplete="off">
+                <div class="pin-display" id="pinDisplay" aria-hidden="true">
+                    <div class="pin-cell"></div>
+                    <div class="pin-cell"></div>
+                    <div class="pin-cell"></div>
+                    <div class="pin-cell"></div>
+                </div>
+
+                <input type="text" id="pinInput" name="pin" inputmode="numeric" maxlength="4"
+                    class="visually-hidden-input" value="" autofocus>
+
+                {% if error %}
+                <p class="inline-alert">⚠ {{ error }}</p>
+                {% endif %}
+
+                <div class="keypad">
+                    <button type="button" class="key" data-digit="1">1</button>
+                    <button type="button" class="key" data-digit="2">2</button>
+                    <button type="button" class="key" data-digit="3">3</button>
+                    <button type="button" class="key" data-digit="4">4</button>
+                    <button type="button" class="key" data-digit="5">5</button>
+                    <button type="button" class="key" data-digit="6">6</button>
+                    <button type="button" class="key" data-digit="7">7</button>
+                    <button type="button" class="key" data-digit="8">8</button>
+                    <button type="button" class="key" data-digit="9">9</button>
+                    <button type="button" class="key key-action" data-action="clear">CLR</button>
+                    <button type="button" class="key" data-digit="0">0</button>
+                    <button type="button" class="key key-action" data-action="del">DEL</button>
+                </div>
+
+                <button type="submit" class="unlock-btn">Attempt unlock</button>
+            </form>
+
+            {% if generated_pin %}
+            <div class="readout {{ 'granted' if result else 'denied' }}">
+                <span class="readout-label">{{ 'FULL CRACK — VAULT OPEN' if result else 'PARTIAL READ' }}</span>
+                <div class="readout-digits">
+                    {% for d in generated_pin %}
+                    <span class="readout-digit" style="animation-delay: {{ loop.index0 * 0.12 }}s">{{ d }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="feedback-row">
+                    <span class="feedback-chip bulls">{{ bulls }} bull{{ 's' if bulls != 1 else '' }}</span>
+                    <span class="feedback-chip cows">{{ cows }} cow{{ 's' if cows != 1 else '' }}</span>
+                </div>
+
+                <span class="points-earned">+{{ points }} pts</span>
+
+                <span class="readout-caption">
+                    {% if result %}
+                    all four digits, right where they belong.
+                    {% else %}
+                    your guess was {{ user_pin }} — the live code is above.
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+
+            <details class="rules">
+                <summary>Scoring rules</summary>
+                <ul>
+                    <li><strong>Bull</strong> — a digit in the exact right spot: <strong>{{ bull_points }} pts</strong>
+                        each.</li>
+                    <li><strong>Cow</strong> — a digit that's in the code, just the wrong spot: <strong>{{ cow_points }}
+                            pts</strong> each.</li>
+                    <li><strong>Full crack</strong> — all 4 digits, right position: flat <strong>{{ jackpot_total }}
+                            pts</strong>.</li>
+                </ul>
+                <p class="rules-fair">Every code is drawn with a cryptographically secure generator, so all 10,000
+                    combinations are equally likely on every attempt — no pattern, no memory, no bias toward any digit.
+                </p>
+            </details>
+
+        </div>
+
+        <form method="POST" class="reset-form">
+            <input type="hidden" name="reset" value="1">
+            <button type="submit" class="reset-btn">Reset score</button>
+        </form>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
